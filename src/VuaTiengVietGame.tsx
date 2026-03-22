@@ -155,8 +155,8 @@ export default function VuaTiengVietGame({ initialQuestions, onBack }: VuaTiengV
           <p className="text-gray-500 text-lg mb-8 font-medium italic">Thử thách trí tuệ - Sắp xếp ngôn từ</p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button onClick={onBack} className="px-6 py-4 rounded-full font-bold text-slate-500 hover:bg-slate-100 transition-colors">
-              Quay lại
+            <button onClick={onBack} className="px-6 py-4 rounded-full font-bold text-slate-500 hover:bg-slate-100 transition-colors flex items-center gap-2">
+              🔀 Đổi Game
             </button>
             <button onClick={() => setScreen('rules')} className="bg-gradient-to-r from-[#FF512F] to-[#DD2476] text-white px-12 py-4 rounded-full text-xl font-black shadow-xl uppercase tracking-widest hover:scale-105 transition-transform">
                 BẮT ĐẦU CHƠI
@@ -321,9 +321,9 @@ export default function VuaTiengVietGame({ initialQuestions, onBack }: VuaTiengV
             </button>
             <button 
               onClick={onBack} 
-              className="w-full bg-white text-gray-800 border-2 border-gray-200 px-8 py-4 rounded-full font-black text-lg hover:bg-gray-50 transition-colors"
+              className="w-full bg-white text-gray-800 border-2 border-gray-200 px-8 py-4 rounded-full font-black text-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
             >
-                QUAY LẠI ỨNG DỤNG
+                🎮 Chọn Game Khác
             </button>
           </div>
       </div>

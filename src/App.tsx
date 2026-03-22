@@ -302,6 +302,11 @@ export default function App() {
   const [m1DocxImages, setM1DocxImages] = useState<string[]>([]); // base64 data URLs of images in DOCX
   const m1FileInputRef = useRef<HTMLInputElement>(null);
 
+  // Mode 2 File Upload State
+  const [m2IsExtracting, setM2IsExtracting] = useState(false);
+  const [m2FileInfo, setM2FileInfo] = useState<{ name: string; type: string } | null>(null);
+  const m2FileInputRef = useRef<HTMLInputElement>(null);
+
   // Mode 2 / Shared State
   const [questions, setQuestions] = useState<string | null>(null);
   const [parsedQuestions, setParsedQuestions] = useState<QuestionItem[]>([]);
@@ -912,8 +917,19 @@ export default function App() {
   // Extract text + images from DOCX or PDF.
   // DOCX: XML technique — parse word/document.xml to preserve layout + image positions exactly.
   // PDF: Gemini inline base64.
-  const extractTextFromFile = async (file: File) => {
-    setM1IsExtracting(true); setError(null); setM1DocxImages([]);
+  const extractTextFromFile = async (
+    file: File,
+    opts?: {
+      setExtracting?: (v: boolean) => void;
+      setFileInfo?: (v: { name: string; type: string } | null) => void;
+      setExtractedText?: (v: string) => void;
+    }
+  ) => {
+    const _setExtracting = opts?.setExtracting ?? setM1IsExtracting;
+    const _setFileInfo = opts?.setFileInfo ?? setM1FileInfo;
+    const _setExtractedText = opts?.setExtractedText ?? setM1RawText;
+    _setExtracting(true); setError(null);
+    if (!opts) setM1DocxImages([]);
     try {
       const currentApiKey = apiKey || process.env.GEMINI_API_KEY || '';
       if (!currentApiKey) { setError('Vui lòng thiết lập API Key trước.'); setM1IsExtracting(false); return; }
@@ -1015,7 +1031,8 @@ export default function App() {
         });
 
         // Use directly — no Gemini needed for DOCX text extraction
-        setM1RawText(lines.join('\n'));
+        _setExtractedText(lines.join('\n'));
+        _setFileInfo({ name: file.name, type: file.type });
 
       } else {
         // ── PDF: Gemini inline base64 + trích xuất ảnh ─────────────
@@ -1029,7 +1046,8 @@ export default function App() {
           { text: prompt },
           { inlineData: { data: base64, mimeType: 'application/pdf' } },
         ]);
-        setM1RawText(text || '');
+        _setExtractedText(text || '');
+        _setFileInfo({ name: file.name, type: file.type });
 
         // Trích xuất ảnh từ PDF bằng kỹ thuật render canvas
         try {
@@ -1043,11 +1061,11 @@ export default function App() {
         }
       }
 
-      setM1IsExtracting(false);
+      _setExtracting(false);
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Đã có lỗi xảy ra khi trích xuất nội dung. Vui lòng thử lại.');
-      setM1IsExtracting(false);
+      _setExtracting(false);
     }
   };
 
@@ -1724,7 +1742,65 @@ Văn bản:\n${m1RawText.slice(0, 8000)}`; // Giới hạn 8000 ký tự
                   <ChevronRight size={14} style={{ transform:'rotate(180deg)' }} /> Trang chủ
                 </button>
                 <h2 style={{ fontSize:22, fontWeight:800, color:'var(--text)', marginBottom:4 }}>📚 Nhập nội dung bài học</h2>
-                <p style={{ color:'var(--text-3)', fontSize:13 }}>Nhập văn bản hoặc tải ảnh, AI sẽ phân tích kiến thức chính.</p>
+                <p style={{ color:'var(--text-3)', fontSize:13 }}>Nhập văn bản, tải ảnh, hoặc tải file Word/PDF — AI sẽ phân tích kiến thức chính.</p>
+              </div>
+
+              {/* ── File Upload (Word/PDF) ── */}
+              <div
+                onClick={() => !m2IsExtracting && m2FileInputRef.current?.click()}
+                style={{
+                  border: m2FileInfo ? '2px solid #10b981' : '2px dashed var(--border)',
+                  background: m2IsExtracting ? 'var(--blue-light)' : m2FileInfo ? '#f0fdf4' : '#fafafa',
+                  borderRadius:12, padding:'18px 16px', cursor: m2IsExtracting ? 'wait' : 'pointer',
+                  display:'flex', alignItems:'center', justifyContent:'center', gap:12,
+                  flexDirection:'column', minHeight:90, marginBottom:16, transition:'all .2s'
+                }}>
+                <input ref={m2FileInputRef} type="file" className="hidden" accept=".docx,.pdf"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setInputText('');
+                      setM2FileInfo(null);
+                      await extractTextFromFile(file, {
+                        setExtracting: setM2IsExtracting,
+                        setFileInfo: setM2FileInfo,
+                        setExtractedText: setInputText,
+                      });
+                    }
+                    e.target.value = '';
+                  }} />
+                {m2IsExtracting ? (
+                  <div className="ai-loading" style={{ border:'none', background:'transparent', padding:0 }}>
+                    <div className="spinner" />
+                    <span className="ai-loading-text">🤖 AI đang đọc và trích xuất nội dung tập…</span>
+                  </div>
+                ) : m2FileInfo ? (
+                  <div style={{ display:'flex', alignItems:'center', gap:12, width:'100%' }}>
+                    <div style={{ fontSize:28 }}>{m2FileInfo.type.includes('pdf') ? '📄' : '📝'}</div>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontWeight:600, fontSize:13, color:'#15803d' }}>{m2FileInfo.name}</div>
+                      <div style={{ fontSize:12, color:'#16a34a' }}>✅ Đã trích xuất — nội dung hiện trong ô văn bản bên dưới</div>
+                    </div>
+                    <button className="btn btn-ghost btn--icon" onClick={e => { e.stopPropagation(); setM2FileInfo(null); setInputText(''); }}>
+                      <RefreshCw size={14} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ fontSize:32 }}>📂</div>
+                    <div style={{ textAlign:'center' }}>
+                      <div style={{ fontWeight:600, fontSize:13, color:'var(--text-2)', marginBottom:4 }}>Tải lên file Word hoặc PDF</div>
+                      <div style={{ fontSize:12, color:'var(--text-3)' }}>Hỗ trợ <strong>.docx</strong> và <strong>.pdf</strong> · AI sẽ tự đọc và trích xuất văn bản</div>
+                    </div>
+                    <span className="btn btn-primary btn--sm">↑ Chọn tệp</span>
+                  </>
+                )}
+              </div>
+
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:16 }}>
+                <div style={{ flex:1, height:1, background:'var(--border)' }} />
+                <span style={{ fontSize:12, color:'var(--text-3)', fontWeight:500 }}>hoặc nhập thủ công</span>
+                <div style={{ flex:1, height:1, background:'var(--border)' }} />
               </div>
 
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:20 }}>
@@ -2331,29 +2407,42 @@ Văn bản:\n${m1RawText.slice(0, 8000)}`; // Giới hạn 8000 ký tự
 
               ) : (
                 <div className="w-full min-h-[600px]">
-                  {/* ── Thanh đổi game (luôn hiển thị khi đang chơi) ── */}
-                  <div className="flex items-center justify-between mb-3 px-1">
-                    <div className="flex items-center gap-2 text-sm text-on-surface-variant font-medium">
-                      <span className="material-symbols-outlined" style={{ fontSize: 18 }}>sports_esports</span>
-                      <span>Đang chơi: <strong className="text-on-surface">{GAME_LIBRARY.find(g => g.id === selectedGameId)?.name || selectedGameId}</strong></span>
+                  {/* ── Thanh điều khiển game ── */}
+                  <div
+                    className="flex items-center justify-between mb-4 px-4 py-3 rounded-2xl"
+                    style={{
+                      background: 'var(--color-surface-container)',
+                      border: '1px solid var(--border)',
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span style={{ fontSize: 20 }}>🎮</span>
+                      <div>
+                        <div className="text-xs text-on-surface-variant font-medium" style={{ lineHeight: 1.2 }}>Đang chơi</div>
+                        <div className="font-bold text-on-surface text-sm">{GAME_LIBRARY.find(g => g.id === selectedGameId)?.name || selectedGameId}</div>
+                      </div>
                     </div>
-                    <button
-                      onClick={() => setSelectedGameId(null)}
-                      className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-semibold transition-all"
-                      style={{ background: 'var(--color-primary-container)', color: 'var(--color-on-primary-container)' }}
-                    >
-                      <span className="material-symbols-outlined" style={{ fontSize: 16 }}>swap_horiz</span>
-                      Đổi Game
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setStage(stage === 'm1_game' ? 'm1_edit' : 'm2_questions')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                        style={{ background: 'var(--color-surface-container-high)', color: 'var(--color-on-surface-variant)', border: '1px solid var(--border)' }}
+                      >
+                        <ChevronRight size={13} style={{ transform: 'rotate(180deg)' }} />
+                        Bộ câu hỏi
+                      </button>
+                      <button
+                        onClick={() => setSelectedGameId(null)}
+                        className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-sm font-bold transition-all"
+                        style={{ background: 'linear-gradient(135deg, #6366f1, #7c3aed)', color: '#fff', boxShadow: '0 2px 12px rgba(99,102,241,0.35)' }}
+                      >
+                        <span style={{ fontSize: 15 }}>🔀</span>
+                        Đổi Game
+                      </button>
+                    </div>
                   </div>
                   {selectedGameId === 'default' && (
                     <div className="glass-card rounded-3xl p-8 bg-gradient-to-br from-indigo-900 via-violet-900 to-purple-900 text-white min-h-[500px] relative">
-                      <button
-                        onClick={() => setSelectedGameId(null)}
-                        className="absolute top-4 left-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium flex items-center gap-2 transition-colors"
-                      >
-                        <ChevronRight size={16} className="rotate-180" /> Đổi Game
-                      </button>
                       <div className="mt-8 h-full">
                         {parsedQuestions.length > 0 ? (
                           <GameComponent questions={parsedQuestions} />

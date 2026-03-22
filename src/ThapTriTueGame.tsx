@@ -195,7 +195,7 @@ export default function ThapTriTueGame({ initialQuestions, onBack }: ThapTriTueP
         </p>
         <div className="flex flex-wrap gap-4 justify-center">
           <button onClick={onBack} className="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white font-bold py-4 px-8 rounded-2xl transition-all active:scale-95 border border-white/30">
-            ← Quay lại
+            🔀 Đổi Game
           </button>
           <button onClick={startGame} className="bg-white text-sky-600 font-black py-4 px-12 rounded-2xl text-xl shadow-2xl hover:scale-105 transition-transform active:scale-95">
             BẮT ĐẦU CHƠI ({gameQuestions.length} câu)
@@ -251,7 +251,7 @@ export default function ThapTriTueGame({ initialQuestions, onBack }: ThapTriTueP
             </div>
             <div className="flex gap-3">
               <button onClick={onBack} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-4 rounded-2xl transition-colors">
-                ← Về app
+                🎮 Chọn Game Khác
               </button>
               <button onClick={startGame} className="flex-1 bg-sky-500 hover:bg-sky-600 text-white font-black py-4 rounded-2xl shadow-lg transition-all active:scale-95">
                 Chơi lại

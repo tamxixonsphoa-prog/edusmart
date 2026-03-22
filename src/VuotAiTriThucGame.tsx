@@ -151,7 +151,7 @@ export default function VuotAiTriThucGame({ initialQuestions, onBack }: VuotAiTr
                   onClick={onBack} 
                   className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-10 rounded-full border border-slate-600 transition-colors"
                 >
-                  <ChevronLeft className="inline-block mr-2" size={20} /> QUAY LẠI
+                  🔀 Đổi Game
                 </button>
                 <button 
                   onClick={startGame} 
@@ -307,9 +307,9 @@ export default function VuotAiTriThucGame({ initialQuestions, onBack }: VuotAiTr
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button 
                 onClick={onBack} 
-                className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-5 px-10 rounded-full transition-colors text-lg"
+                className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-5 px-10 rounded-full transition-colors text-lg flex items-center gap-2"
               >
-                 VỀ ỨNG DỤNG
+                 🎮 Chọn Game Khác
               </button>
               <button 
                 onClick={startGame} 
