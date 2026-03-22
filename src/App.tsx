@@ -58,16 +58,6 @@ const QUESTION_TYPES = [
 
 const GAME_LIBRARY = [
   {
-    id: 'default',
-    name: 'Quiz Mở Thẻ',
-    emoji: '🎴',
-    icon3d: 'https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Flower%20playing%20cards/3D/flower_playing_cards_3d.png',
-    description: 'Trả lời đúng để lật mở từng thẻ bài.',
-    compatibleTypes: ['Trắc nghiệm khách quan', 'Đúng / Sai'],
-    colorFrom: 'from-indigo-500', colorTo: 'to-violet-500',
-    hoverBorder: 'hover:border-indigo-400',
-  },
-  {
     id: 'vuot_ai',
     name: 'Vượt Ải Tri Thức',
     emoji: '⚔️',
@@ -2441,19 +2431,6 @@ Văn bản:\n${m1RawText.slice(0, 8000)}`; // Giới hạn 8000 ký tự
                       </button>
                     </div>
                   </div>
-                  {selectedGameId === 'default' && (
-                    <div className="glass-card rounded-3xl p-8 bg-gradient-to-br from-indigo-900 via-violet-900 to-purple-900 text-white min-h-[500px] relative">
-                      <div className="mt-8 h-full">
-                        {parsedQuestions.length > 0 ? (
-                          <GameComponent questions={parsedQuestions} />
-                        ) : (
-                          <div className="flex items-center justify-center h-full text-white/50">
-                            Chưa có câu hỏi nào để hiển thị trong game.
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                   {selectedGameId === 'vuot_ai' && (
                     <VuotAiTriThucGame 
                       initialQuestions={parsedQuestions.map(q => ({
